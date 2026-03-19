@@ -1,0 +1,27 @@
+---
+# Kustomize overlay — apply everything in the right order.
+#
+# Usage:
+#   kubectl apply -k 04-kubernetes/ -n rag-workshop
+#
+# To preview without applying:
+#   kubectl kustomize 04-kubernetes/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # Secrets & config first
+  - secrets/rag-secrets.yaml
+  - configmaps/rag-config.yaml
+  # MongoDB pod (comment out when using Atlas)
+  - mongodb/pv.yaml
+  - mongodb/deployment.yaml
+  - mongodb/service.yaml
+  # RAG application
+  - rag-app/deployment.yaml
+  - rag-app/service.yaml
+  # Ingest job (run manually after first deploy)
+  # - rag-app/job-ingest.yaml
+
+commonLabels:
+  project: rag-workshop

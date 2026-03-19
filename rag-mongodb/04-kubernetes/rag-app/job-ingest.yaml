@@ -1,0 +1,56 @@
+---
+# One-shot Kubernetes Job to ingest documents into MongoDB.
+# Run this once after the MongoDB pod (or Atlas) is ready.
+# Re-run after adding new documents to refresh the vector store.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rag-ingest
+  labels:
+    app: rag-app
+    job-type: ingest
+spec:
+  # Keep completed/failed pods for log inspection; clean up manually.
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: rag-app
+        job-type: ingest
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: ingest
+          image: rag-app:latest
+          imagePullPolicy: IfNotPresent
+          # Override CMD to run the ingest script instead of the API server
+          command: ["python", "-m", "01-basic-rag.ingest"]
+          env:
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: MONGODB_URI
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: OPENAI_API_KEY
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: rag-config
+                  key: DB_NAME
+            - name: COLLECTION_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: rag-config
+                  key: COLLECTION_NAME
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

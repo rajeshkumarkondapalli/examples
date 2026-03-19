@@ -1,0 +1,31 @@
+---
+# Change type to LoadBalancer for cloud clusters (EKS, GKE, AKS)
+# or use an Ingress controller for production HTTP routing.
+apiVersion: v1
+kind: Service
+metadata:
+  name: rag-app
+  labels:
+    app: rag-app
+spec:
+  selector:
+    app: rag-app
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+# Optional: expose externally on cloud clusters
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: rag-app-lb
+# spec:
+#   selector:
+#     app: rag-app
+#   ports:
+#     - port: 80
+#       targetPort: 8080
+#   type: LoadBalancer
